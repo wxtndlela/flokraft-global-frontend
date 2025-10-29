@@ -12,26 +12,26 @@
 ### Primary Suspect: Memory Leak in GET Requests
 
 The logs show repeated GET requests every 3 seconds:
-```
+\`\`\`
 GET /analyses?analysis_type=couple&user_id=... (every 3 seconds)
 GET /admin/analyses (when admin panel is open)
-```
+\`\`\`
 
 **Problem:** These endpoints may be loading ALL analyses into memory without cleanup.
 
 ### Common Memory Issues in Flask
 
 #### Issue 1: Loading All Documents Without Pagination
-```python
+\`\`\`python
 # BAD - Loads ALL analyses into memory
 @app.route('/analyses')
 def get_analyses():
     analyses = db.collection('analyses').get()
     return jsonify([a.to_dict() for a in analyses])  # Huge list in memory
-```
+\`\`\`
 
 #### Issue 2: Not Releasing References
-```python
+\`\`\`python
 # BAD - Keeps references to all documents
 analyses_cache = {}
 
@@ -41,10 +41,10 @@ def get_analyses():
     for a in analyses:
         analyses_cache[a.id] = a.to_dict()  # Accumulates in memory!
     return jsonify(list(analyses_cache.values()))
-```
+\`\`\`
 
 #### Issue 3: Video Data in Memory
-```python
+\`\`\`python
 # BAD - Loads video URLs with large blobs
 @app.route('/analyses')
 def get_analyses():
@@ -55,13 +55,13 @@ def get_analyses():
         # If video_url points to blob data in Firestore, this loads it all
         results.append(data)
     return jsonify(results)
-```
+\`\`\`
 
 ## Immediate Fixes Required
 
 ### Fix 1: Add Pagination to GET /analyses
 
-```python
+\`\`\`python
 @app.route('/analyses')
 def get_analyses():
     user_id = request.args.get('user_id')
@@ -92,11 +92,11 @@ def get_analyses():
     del analyses
 
     return jsonify(results)
-```
+\`\`\`
 
 ### Fix 2: Add Memory Monitoring
 
-```python
+\`\`\`python
 import psutil
 import gc
 import logging
@@ -115,13 +115,13 @@ def before_request():
 def after_request(response):
     gc.collect()  # Force garbage collection
     return response
-```
+\`\`\`
 
 ### Fix 3: Reduce Data in Responses
 
 Only return necessary fields:
 
-```python
+\`\`\`python
 @app.route('/analyses')
 def get_analyses():
     # ... query code ...
@@ -142,11 +142,11 @@ def get_analyses():
         })
 
     return jsonify(results)
-```
+\`\`\`
 
 ### Fix 4: Add Request Limits
 
-```python
+\`\`\`python
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -160,7 +160,7 @@ limiter = Limiter(
 @limiter.limit("30 per minute")  # Max 30 requests per minute
 def get_analyses():
     # ... endpoint code ...
-```
+\`\`\`
 
 ## Frontend Optimizations (Already Applied)
 
@@ -169,7 +169,7 @@ def get_analyses():
 Current: Every 3 seconds
 Recommended: Progressive backoff
 
-```javascript
+\`\`\`javascript
 // In dashboard-content.tsx
 const [pollInterval, setPollInterval] = useState(3000)
 
@@ -191,13 +191,13 @@ const handleSubmit = async () => {
   setPollInterval(3000)
   // ... submit code ...
 }
-```
+\`\`\`
 
 ## Diagnostic Steps
 
 ### Step 1: Check Current Memory Usage
 
-```bash
+\`\`\`bash
 # On your server, run:
 ps aux | grep python
 # or
@@ -205,11 +205,11 @@ top -p $(pgrep -f flokraft)
 
 # Watch memory in real-time
 watch -n 1 'ps aux | grep python | grep -v grep'
-```
+\`\`\`
 
 ### Step 2: Add Memory Profiling
 
-```bash
+\`\`\`bash
 # Install memory profiler
 pip install memory_profiler
 
@@ -223,13 +223,13 @@ def get_analyses():
 
 # Run with:
 python -m memory_profiler flokraft.py
-```
+\`\`\`
 
 ### Step 3: Check Firestore Query Size
 
 Add this to your GET /analyses endpoint:
 
-```python
+\`\`\`python
 import sys
 
 @app.route('/analyses')
@@ -246,12 +246,12 @@ def get_analyses():
         logging.error(f"Too many analyses returned: {count}. Consider pagination!")
 
     # ... rest of code ...
-```
+\`\`\`
 
 ## Testing After Fixes
 
 ### Test 1: Single Request Memory
-```bash
+\`\`\`bash
 # Before request
 ps aux | grep python
 
@@ -262,10 +262,10 @@ curl "http://localhost:5555/analyses?user_id=xxx"
 ps aux | grep python
 
 # Memory should return to baseline
-```
+\`\`\`
 
 ### Test 2: Sustained Load
-```bash
+\`\`\`bash
 # Run 100 requests
 for i in {1..100}; do
   curl "http://localhost:5555/analyses?user_id=xxx" > /dev/null
@@ -274,11 +274,11 @@ done
 
 # Check if server is still running
 ps aux | grep python
-```
+\`\`\`
 
 ### Test 3: Monitor During Rerun
 
-```bash
+\`\`\`bash
 # Terminal 1: Monitor memory
 watch -n 1 'ps aux | grep python'
 
@@ -288,13 +288,13 @@ tail -f logs/flokraft.log
 # Terminal 3: Trigger rerun
 curl -X POST "http://localhost:5555/analyses/{id}/rerun" \
   -H "Authorization: Bearer {token}"
-```
+\`\`\`
 
 ## Emergency Workarounds
 
 ### Workaround 1: Restart on Crash (systemd)
 
-```bash
+\`\`\`bash
 # Create /etc/systemd/system/flokraft.service
 [Unit]
 Description=Flokraft Backend
@@ -316,19 +316,19 @@ WantedBy=multi-user.target
 # Enable
 sudo systemctl enable flokraft
 sudo systemctl start flokraft
-```
+\`\`\`
 
 ### Workaround 2: Memory Limit + Restart
 
-```bash
+\`\`\`bash
 # Add to service file
 MemoryMax=2G
 MemoryHigh=1.8G
-```
+\`\`\`
 
 ### Workaround 3: Use Gunicorn with Workers
 
-```bash
+\`\`\`bash
 pip install gunicorn
 
 # Run with multiple workers (each gets own memory)
@@ -339,7 +339,7 @@ gunicorn -w 4 -b 0.0.0.0:5555 flokraft:app \
 
 # max-requests causes workers to restart after N requests
 # This prevents memory accumulation
-```
+\`\`\`
 
 ## Expected Behavior After Fixes
 

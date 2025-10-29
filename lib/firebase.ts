@@ -1,6 +1,6 @@
 "use client"
 
-import { initializeApp } from "firebase/app"
+import { initializeApp, getApps, getApp } from "firebase/app"
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -11,18 +11,14 @@ import {
   GoogleAuthProvider,
   updateProfile,
   updateEmail,
-  updatePassword
+  updatePassword,
 } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 import { firebaseConfig } from "./firebase-config"
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
-// Initialize Firebase Auth and get a reference to the service
 export const auth = getAuth(app)
-
-// Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app)
 
 // Google Auth Provider
@@ -69,5 +65,3 @@ export const updateUserPasswordFirebase = (newPassword: string) => {
   }
   return updatePassword(auth.currentUser, newPassword)
 }
-
-console.log("[Firebase] Using real Firebase authentication.")

@@ -106,7 +106,7 @@
 - `BACKEND_MEMORY_DEBUG.md` - Memory debugging guide
 
 **Quick Fix (15 minutes):**
-```python
+\`\`\`python
 import threading
 
 @app.route('/analyses/<analysis_id>/rerun', methods=['POST'])
@@ -124,7 +124,7 @@ def rerun_analysis(analysis_id):
 def process_analysis_async(analysis_id):
     # Heavy video processing here
     pass
-```
+\`\`\`
 
 ---
 
@@ -135,16 +135,16 @@ def process_analysis_async(analysis_id):
 **Solutions:**
 
 1. **Add Pagination:**
-```python
+\`\`\`python
 @app.route('/analyses')
 def get_analyses():
     limit = int(request.args.get('limit', 50))
     query = query.limit(limit)
     # ...
-```
+\`\`\`
 
 2. **Reduce Response Size:**
-```python
+\`\`\`python
 # Don't include large 'text' field in list responses
 results.append({
     'id': analysis.id,
@@ -152,10 +152,10 @@ results.append({
     # ... only essential fields
     # DON'T include 'text' (analysis content)
 })
-```
+\`\`\`
 
 3. **Add Memory Monitoring:**
-```python
+\`\`\`python
 import psutil
 import gc
 
@@ -163,7 +163,7 @@ import gc
 def after_request(response):
     gc.collect()
     return response
-```
+\`\`\`
 
 ---
 
@@ -172,7 +172,7 @@ def after_request(response):
 **Current:** Backend returns 404 if requesting user is not owner
 
 **Fix Needed:**
-```python
+\`\`\`python
 @app.route('/analyses/<analysis_id>/pdf')
 def download_pdf(analysis_id):
     user_id = get_user_id_from_token()
@@ -191,7 +191,7 @@ def download_pdf(analysis_id):
         return jsonify({"error": "Access denied"}), 403
 
     # Generate PDF...
-```
+\`\`\`
 
 **After this fix:** Remove `{!isSharedView && (...)}` wrapper from PDF button in `components/analysis-detail.tsx`
 
@@ -257,7 +257,7 @@ def download_pdf(analysis_id):
 - Console errors for fetch failures
 
 ### Backend (Server):
-```bash
+\`\`\`bash
 # Monitor memory in real-time
 watch -n 1 'ps aux | grep python'
 
@@ -266,7 +266,7 @@ tail -f logs/flokraft.log
 
 # Memory profiling
 python -m memory_profiler flokraft.py
-```
+\`\`\`
 
 ---
 

@@ -11,7 +11,7 @@ The rerun endpoint is processing videos **synchronously**, which:
 4. Exhausts available memory, causing the OS to kill the process
 
 ## Current Backend Implementation (Problematic)
-```python
+\`\`\`python
 @app.route('/analyses/<analysis_id>/rerun', methods=['POST'])
 def rerun_analysis(analysis_id):
     user_id = AuthManager.get_user_id_from_token()
@@ -32,12 +32,12 @@ def rerun_analysis(analysis_id):
     })
 
     return jsonify({"success": True})
-```
+\`\`\`
 
 ## Solution: Asynchronous Processing
 
 ### Option 1: Threading (Quick Fix)
-```python
+\`\`\`python
 import threading
 from flask import jsonify
 
@@ -133,12 +133,12 @@ def process_analysis_async(analysis_id, analysis_data):
             'error': str(e),
             'failed_at': firestore.SERVER_TIMESTAMP
         })
-```
+\`\`\`
 
 ### Option 2: Celery Task Queue (Production Ready)
 If you're experiencing frequent crashes, consider using Celery:
 
-```python
+\`\`\`python
 # Install: pip install celery redis
 # Start Redis: docker run -d -p 6379:6379 redis
 
@@ -168,11 +168,11 @@ def rerun_analysis(analysis_id):
     process_analysis_task.delay(analysis_id, analysis_data)
 
     return jsonify({"success": True}), 200
-```
+\`\`\`
 
 ### Option 3: Cloud Functions (Serverless)
 For Google Cloud Platform:
-```python
+\`\`\`python
 # Trigger a Cloud Function or Cloud Run job
 import requests
 
@@ -189,13 +189,13 @@ def rerun_analysis(analysis_id):
     }, timeout=5)  # Don't wait for response
 
     return jsonify({"success": True}), 200
-```
+\`\`\`
 
 ## Memory Optimization Tips
 
 ### 1. Stream Video Processing
 Instead of loading entire video into memory:
-```python
+\`\`\`python
 def process_video_in_chunks(video_path):
     """Process video in smaller chunks"""
     import cv2
@@ -226,10 +226,10 @@ def process_video_in_chunks(video_path):
             frames_to_analyze = []
 
     cap.release()
-```
+\`\`\`
 
 ### 2. Clean Up Resources
-```python
+\`\`\`python
 import gc
 import tempfile
 import os
@@ -253,10 +253,10 @@ def process_analysis_async(analysis_id, analysis_data):
         if video_path and os.path.exists(video_path):
             os.remove(video_path)
         gc.collect()  # Force garbage collection
-```
+\`\`\`
 
 ### 3. Add Memory Limits
-```python
+\`\`\`python
 import resource
 
 # Limit memory usage (e.g., 2GB)
@@ -264,7 +264,7 @@ resource.setrlimit(
     resource.RLIMIT_AS,
     (2 * 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024)
 )
-```
+\`\`\`
 
 ## Immediate Action Required
 
@@ -275,14 +275,14 @@ resource.setrlimit(
 
 ## Testing
 After implementing the fix:
-```bash
+\`\`\`bash
 # Test the endpoint returns quickly
 curl -X POST "http://localhost:5555/analyses/{id}/rerun" \
   -H "Authorization: Bearer {token}"
 
 # Should return within 1 second with 200 OK
 # Analysis should complete in background over next few minutes
-```
+\`\`\`
 
 ## Frontend Changes (Already Applied)
 The frontend now includes:
@@ -293,7 +293,7 @@ The frontend now includes:
 
 ## Monitoring
 Add logging to track:
-```python
+\`\`\`python
 import psutil
 import logging
 
@@ -306,4 +306,4 @@ def log_memory_usage():
 log_memory_usage()
 process_video(video_path)
 log_memory_usage()
-```
+\`\`\`

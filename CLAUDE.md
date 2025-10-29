@@ -19,7 +19,7 @@ Flokraft is a professional dance analysis platform powered by AI. It's a Next.js
 
 ## Common Commands
 
-```bash
+\`\`\`bash
 # Development
 npm run dev              # Start dev server (Next.js dev mode)
 
@@ -31,7 +31,7 @@ npm start               # Start production server
 
 # Linting
 npm run lint            # Run Next.js linter
-```
+\`\`\`
 
 ## Architecture
 
@@ -95,11 +95,11 @@ npm run lint            # Run Next.js linter
 ### Path Aliases
 
 TypeScript paths are configured in `tsconfig.json`:
-```json
+\`\`\`json
 "paths": {
   "@/*": ["./*"]
 }
-```
+\`\`\`
 Use `@/` prefix for imports (e.g., `import { useAuth } from "@/contexts/auth-context"`)
 
 ### Environment Variables
@@ -200,13 +200,13 @@ File uploads use XMLHttpRequest (not fetch) to track upload progress:
 ### Polling & Real-time Updates
 
 Dashboard auto-refreshes analyses every 3 seconds via `setInterval`:
-```javascript
+\`\`\`javascript
 useEffect(() => {
   fetchAnalyses()
   const interval = setInterval(fetchAnalyses, 3000)
   return () => clearInterval(interval)
 }, [analysisType])
-```
+\`\`\`
 
 ## Known Configuration Notes
 
