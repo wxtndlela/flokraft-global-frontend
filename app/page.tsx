@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { SidebarLayout } from "@/components/sidebar-layout"
 import { DashboardContent } from "@/components/dashboard-content"
